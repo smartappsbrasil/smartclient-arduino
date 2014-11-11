@@ -9,8 +9,8 @@ SMARTClient, a Smartapps client for Arduino
 Smartapps (http://www.smartapps.com.br) - Copyright 2013
 */
 
-#include "SmartClient.h"
-#include "Base64.h"
+#include <SmartClient.h>
+#include <Base642.h>
 bool SmartClient::connect(char hostname[], char login[], char pass[], int port) {
     bool result = true;
 
