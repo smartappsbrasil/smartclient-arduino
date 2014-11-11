@@ -4,19 +4,19 @@ SMARTClient, a Smartapps client for Arduino
 
 @author         Fabio Costa Mangia <fabio.costa@smartapps.com.br>
 @contribution   Prof. Rodrigo M A Almeida <rodrigomax@unifei.edu.br>
-@contribution   José Wilker <jose.wilker@smartapps.com.br>
+@contribution   JosÃ© Wilker <jose.wilker@smartapps.com.br>
 
 Smartapps (http://www.smartapps.com.br) - Copyright 2013
 */
 
 #include "SmartClient.h"
-
+#include "Base64.h"
 bool SmartClient::connect(char hostname[], char login[], char pass[], int port) {
-    bool result = false;
+    bool result = true;
 
-    #ifdef DEBUGPRINT
+  #ifdef DEBUGPRINT
       Serial.println(F("Smart Connecting"));
-    #endif
+   #endif
 
     LOGIN = login;
     encrypt(login, pass);
@@ -48,7 +48,7 @@ void SmartClient::disconnect() {
 
 void SmartClient::encrypt(char login[], char pass[]){
     //maximo no teste foi 70
-    char loginPass[90]; //variavel para ser concatenada em login:pass
+    char loginPass[70]; //variavel para ser concatenada em login:pass
 
 
     strcpy(loginPass,login);
@@ -63,7 +63,7 @@ void SmartClient::encrypt(char login[], char pass[]){
 
 
     #ifdef DEBUGPRINT
-      Serial.print("Encoded: ");
+      Serial.print(F("Encoded: "));
       Serial.println(AuthID);
     #endif
 }
@@ -372,7 +372,7 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
         Serial.println(F("Sending Data POST"));
     #endif
 
-    _client.print(F("POST /api/fp/to/"));
+    _client.print(F("POST /api/fp/exec/json/"));
     _client.print(app);
     _client.print(F("/"));
     _client.print(schema);
@@ -393,6 +393,7 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
     _client.println();
     #ifdef DEBUGPRINT
         Serial.println(F("Data Sent"));
+        Serial.println(PHPSESSID);
     #endif
     //se tirar essa linha soh manda 1 vez
     _client.stop();
@@ -404,7 +405,7 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
 #ifdef DEBUGPRINT
             Serial.println(F("Sending Data GET"));
 #endif
-            _client.print(F("GET /api/fp/"));//Normal é GET /api/fp/from/
+            _client.print(F("GET /api/fp/"));//Normal Ã© GET /api/fp/from/
             _client.print(app);
             _client.print(F("/"));
             _client.print(LOGIN);
@@ -417,11 +418,8 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
             _client.print(F("Cookie: PHPSESSID="));
             _client.println(PHPSESSID);
             //_client.println(F("Content-Type: application/x-www-form-urlencoded"));
-
             _client.println(F("Connection: close"));
-
             _client.println();
-
 #ifdef DEBUGPRINT
             Serial.println(F("Data Sent"));
 #endif
