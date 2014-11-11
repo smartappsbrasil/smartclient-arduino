@@ -63,14 +63,14 @@ class SmartClient {
 
     private:
         //Variaveis Locais: maximo no teste foi 70
-        char AuthID[90];
+        char AuthID[70];
         char PHPSESSID[33];
         String LOGIN;
 
         String buff; //utilizado pra ler as linhas
 
         #ifdef NEW
-        char readBuffer[1500]; //nao tem linha tao
+        char readBuffer[750]; //nao tem linha tao
         int posBuffer;
         #endif
 
