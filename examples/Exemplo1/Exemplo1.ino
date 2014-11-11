@@ -1,17 +1,20 @@
 //Smartapps Libs:
+#include <Base642.h>
 #include <SmartClient.h>
+
+
 //Ethernet Libs:
 #include <SPI.h>
 #include <Ethernet.h>
 //Definicao endereco MAC do Ethernet Shield:
 //byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFF, 0xED };
-byte mac[] = {  0x3C, 0x07, 0x54, 0x00, 0x2D, 0xCF };
+byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFF, 0xED };
 //Definicoes do usuário na Smartapps:
 char server[] = "www.smartapps.com.br";              //Endereco Smartapps.
-char login[] = "LOGIN";   //Login do usuario: Encontra-se na plataforma.
-char password[] = "USER";            //Senha do usuário: Encontra-se na plataforma.
+char login[] = "Login";   //Login do usuario: Encontra-se na plataforma.
+char password[] = "Password";            //Senha do usuário: Encontra-se na plataforma.
 char app[] = "controls";                             //Nome do aplicativo utilizado.
-char schema[] = "schema";  //Schema do aplicativo: Normalmente o mesmo do usuário, só muda se for utilizado um aplicativo que foi compartilhado por outro usuário, neste caso é o login do outro usuário.
+char schema[] = "Schema";  //Schema do aplicativo: Normalmente o mesmo do usuário, só muda se for utilizado um aplicativo que foi compartilhado por outro usuário, neste caso é o login do outro usuário.
 char caminhoPost[] = "variaveis_valores/insert";
 SmartClient smart; 
 //Variaveis do Exemplo 1;
@@ -28,9 +31,10 @@ void setup() {
   smart.connect(server, login, password);
 }
 void loop() {
-    PostData = "variavel=5&datetime=0&valor="+ String(random(0,100));  //Gera valor randomico a cada loop e adiciona a variavel escolhida.
+    PostData = "variavel=3&datetime=0&valor="+ String(random(0,100));  //Gera valor randomico a cada loop e adiciona a variavel escolhida.
     smart.send(true, server, app, schema, caminhoPost, PostData);    //Envia informacoes para plataforma.
     delay(5000);  //Informacao é enviada a cada 5 segundos.
+
 }
 void config_rede(){
   if (Ethernet.begin(mac) == 0) {
@@ -49,3 +53,6 @@ int get_free_memory()
     free_memory = ((int)&free_memory) - ((int)__brkval);
   return free_memory;
 }
+
+
+
