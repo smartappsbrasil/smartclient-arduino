@@ -53,19 +53,28 @@ class SmartClient {
     public:
         //typedef void (*DataArrivedDelegate)(SmartClient client, String data);
         bool connect(char hostname[], char login[] = "", char pass[] = "", int port = 80);
+        String close(char hostname[], char login[] = "", char pass[] = "", int port = 80);
+        String getSchema(char hostname[], char login[] = "", char pass[] = "",int port = 80);
         bool connected();
-        void disconnect();
-
-        //void setDataArrivedDelegate(DataArrivedDelegate dataArrivedDelegate);
+         //void setDataArrivedDelegate(DataArrivedDelegate dataArrivedDelegate);
         void send(bool GoP, char hostname[], char app[], char schema[], char caminho[], String data = "");
-
+        char* getData(char hostname[], char login[], char pass[],char app[],char form[],char schema[],char campo[]);
+       // void sendData( char hostname[], char app[], char form[], char schema[]);
+        
         String readResponse();
-
-    private:
-        //Variaveis Locais: maximo no teste foi 70
+        String readSchema();
+        String readSmart();
+        String readSendData();
+        void sendData(char hostname[], char AuthID[],String app,String form,char schema[],String campo);
         char AuthID[70];
         char PHPSESSID[33];
+        
+    private:
+        //Variaveis Locais: maximo no teste foi 70
+
+        //char SENDRETORNO[50];
         String LOGIN;
+
 
         String buff; //utilizado pra ler as linhas
 
@@ -78,17 +87,19 @@ class SmartClient {
         String getStringTableItem(int index);
         void encrypt(char login[], char pass[]);
         void sendHandshake(char hostname[], char AuthID[]);
-
+        void sendSchema(char hostname[], char AuthID[]);
         #ifdef WIFI
         WiFiClient _client;
         #endif
         #ifndef WIFI
         EthernetClient _client;
         #endif
-
         //DataArrivedDelegate _dataArrivedDelegate;
         bool readHandshake();
+       
         void readLine();
+        char* readData();
+        void readResponse2();
 
 };
 
