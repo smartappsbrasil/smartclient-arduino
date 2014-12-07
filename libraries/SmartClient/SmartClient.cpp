@@ -9,8 +9,9 @@ SMARTClient, a Smartapps client for Arduino
 Smartapps (http://www.smartapps.com.br) - Copyright 2013
 */
 
-#include <SmartClient.h>
-#include <Base642.h>
+#include "SmartClient.h"
+#include "Base642.h"
+
 bool SmartClient::connect(char hostname[], char login[], char pass[], int port) {
     bool result = true;
 
@@ -29,73 +30,121 @@ bool SmartClient::connect(char hostname[], char login[], char pass[], int port) 
 
 
 bool SmartClient::connected() {
-
-    #ifdef DEBUGPRINT
-      Serial.println(F("Smart connected"));
-    #endif
-
     return _client.connected();
 }
 
-void SmartClient::disconnect() {
+String SmartClient::close(char hostname[], char login[], char pass[], int port) {
+    String result = "";
+    LOGIN = login;
+    encrypt(login, pass);
+    if (_client.connect(hostname, port)) {
+        _client.println(F("GET /api/fp/close/ HTTP/1.1"));
+        _client.print(F("Host: "));
+        _client.println(hostname);
+        _client.print(F("Authorization: Basic "));
+        _client.println(AuthID);
+        _client.print(F("Cookie: PHPSESSID="));
+        _client.println(PHPSESSID);
+        _client.println();
+    }
 
-    #ifdef DEBUGPRINT
-      Serial.println(F("Smart disconnect"));
+
+}
+
+
+
+
+void SmartClient::sendSchema(char hostname[], char AuthID[]){
+        _client.println(F("GET /api/fp/from/controls/_schemas  HTTP/1.1"));
+        _client.print(F("Host: "));
+        _client.println(hostname);
+        _client.println("User-Agent: arduino-ethernet");
+        _client.print(F("Authorization: Basic "));
+        _client.println(AuthID);
+        _client.print(F("Cookie: PHPSESSID="));
+        _client.println(PHPSESSID);
+        _client.println();
+}
+
+
+String SmartClient::getSchema(char hostname[], char login[], char pass[], int port){
+    String result = "";
+    LOGIN = login;
+    encrypt(login, pass);
+    if (_client.connect(hostname, port)) {
+        sendSchema(hostname, AuthID);
+       result = readSchema();
+     //  Serial.println("Schema : ");
+      // Serial.print(result);
+    }
+    return  result;
+}
+
+String SmartClient::readSchema() {
+    int maxAttempts = 300, attempts = 0;
+    int time = millis();
+    int n;
+    int i;
+    String retorno;
+    while(_client.available() == 0 && attempts < maxAttempts) {
+        delay(100);
+        attempts++;
+    }
+    while(_client.available()) {
+       readLine();
+        if(posBuffer = 146){
+           for(i=110;i<142;i++){
+               if(readBuffer[i] != '\0'){
+                    retorno = retorno += readBuffer[i];
+               }
+            }
+        }
+    }
+    return retorno;
+}
+
+
+void SmartClient::readResponse2() {
+    char character;
+    buff = "";
+    #ifdef NEW
+    posBuffer = 0;
     #endif
-
-    _client.stop();
+    while(_client.available() > 0 && (character = _client.read()) != '\n') {
+        if (character != '\r' && character != -1) {
+            #ifndef NEW
+            buff += character;
+            #endif
+            #ifdef NEW
+            readBuffer[posBuffer] = character;
+            posBuffer++;
+            #endif
+      }
+    }
+    #ifdef NEW
+        readBuffer[posBuffer]= '\0';
+    #endif
 }
 
 void SmartClient::encrypt(char login[], char pass[]){
     //maximo no teste foi 70
     char loginPass[70]; //variavel para ser concatenada em login:pass
-
-
     strcpy(loginPass,login);
     strcat(loginPass,":");
     strcat(loginPass,pass);
     base64_encode(AuthID,loginPass,strlen(loginPass));
-
-    #ifdef DEBUGPRINT
-      Serial.print(F("Encoding: "));
-      Serial.println(loginPass);
-    #endif
-
-
-    #ifdef DEBUGPRINT
-      Serial.print(F("Encoded: "));
-      Serial.println(AuthID);
-    #endif
 }
-/*
-void SmartClient::setDataArrivedDelegate(DataArrivedDelegate dataArrivedDelegate) {
-
-    #ifdef DEBUGPRINT
-          Serial.println(F("Smart setDataArrivedDelegate"));
-    #endif
-
-      _dataArrivedDelegate = dataArrivedDelegate;
-}
-*/
-
 void SmartClient::sendHandshake(char hostname[], char AuthID[]) {
     int time = millis();
-
-    #ifdef DEBUGPRINT
-        Serial.println(F("Smart sendHandshake"));
-    #endif
-
     _client.println(F("GET /api/fp/from HTTP/1.1"));
     _client.print(F("Host: "));
     _client.println(hostname);
     _client.print(F("Authorization: Basic "));
     _client.println(AuthID);
     _client.println();
-
     #ifdef DEBUGPRINT
         Serial.print(F("Dados enviados em [ms]: "));
         Serial.println(millis() - time);
-
         Serial.println(F("GET /api/fp/from HTTP/1.1"));
         Serial.print(F("Host: "));
         Serial.println(hostname);
@@ -110,8 +159,6 @@ bool SmartClient::readHandshake() {
     int time = millis();
     int n;
     int i;
-    //String handshake, line;
-
     #ifdef DEBUGPRINT
         Serial.println(F("Smart readHandshake"));
     #endif
@@ -212,10 +259,10 @@ bool SmartClient::readHandshake() {
                 for (n=i+10; readBuffer[n] != ';'; n++){
                   PHPSESSID[n-i-10]= readBuffer[n];
                 }
+               // Session("PHPSESSID") = PHPSESSID;
                 #ifdef DEBUGPRINT
                 Serial.print(F("PHPSESSID encontrado: "));
                 Serial.println(PHPSESSID);
-
                 #endif
                 break;
             }
@@ -243,8 +290,6 @@ bool SmartClient::readHandshake() {
     //procura se conexao foi "sucessfull"
     while(_client.available()) {
         readLine();
-
-
         #ifdef NEW
         result = -1;
         //-10 do Successfull
@@ -291,7 +336,7 @@ bool SmartClient::readHandshake() {
         }
         Serial.println(PHPSESSID);
     #endif
-    return result;
+    return PHPSESSID;
 }
 
 
@@ -317,32 +362,24 @@ String SmartClient::readResponse() {
         readLine();
         handshake += readBuffer + '\n';
     }
+   //erial.println(readBuffer);
     _client.stop();
-
-    #ifdef DEBUGPRINT
-        Serial.print(F("Dados recebidos em [ms]: "));
-        Serial.println(millis() - time);
-        Serial.println(handshake);
-    #endif
-    return handshake;
 }
+
+
+
 
 void SmartClient::readLine() {
     char character;
-
     buff = "";
-
-
     #ifdef NEW
     posBuffer = 0;
     #endif
-
     while(_client.available() > 0 && (character = _client.read()) != '\n') {
         if (character != '\r' && character != -1) {
             #ifndef NEW
             buff += character;
             #endif
-
             #ifdef NEW
             readBuffer[posBuffer] = character;
             posBuffer++;
@@ -350,21 +387,22 @@ void SmartClient::readLine() {
             #endif
         }
     }
+
     #ifdef NEW
-    readBuffer[posBuffer]= '\0';
-      #ifdef DEBUGPRINT
-      Serial.println(readBuffer);
-      #endif
+        readBuffer[posBuffer]= '\0';
+    
     #endif
 
     #ifdef DEBUGPRINT
-        Serial.println(buff);
+
     #endif
 }
 
 void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], char caminho[], String PostData) {
    //DADOS A SEREM ENVIADOS!
-    //_client.flush();
+    _client.flush();
+    String retorno;
+    int i;
     if(GoP==true){
    if (_client.connect(hostname, 80)) {
 
@@ -387,7 +425,6 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
     _client.println(F("Content-Type: application/x-www-form-urlencoded"));
     _client.print(F("Content-Length: "));
     _client.println(PostData.length());
-    _client.println(F("Connection: close"));
     _client.println();
     _client.print(PostData);
     _client.println();
@@ -395,37 +432,85 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
         Serial.println(F("Data Sent"));
         Serial.println(PHPSESSID);
     #endif
-    //se tirar essa linha soh manda 1 vez
+    
+    readSendData();
     _client.stop();
      }
     }
-    if(GoP==false){
-        if (_client.connect(hostname, 80)) {
-
-#ifdef DEBUGPRINT
-            Serial.println(F("Sending Data GET"));
-#endif
-            _client.print(F("GET /api/fp/"));//Normal é GET /api/fp/from/
-            _client.print(app);
-            _client.print(F("/"));
-            _client.print(LOGIN);
-            _client.print(F("/"));
-            _client.print(caminho);
-            _client.println(F("/ HTTP/1.1"));
-            _client.println(F("Host: www.smartapps.com.br"));
-            _client.print(F("Authorization: Basic "));
-            _client.println(AuthID);
-            _client.print(F("Cookie: PHPSESSID="));
-            _client.println(PHPSESSID);
-            //_client.println(F("Content-Type: application/x-www-form-urlencoded"));
-            _client.println(F("Connection: close"));
-            _client.println();
-#ifdef DEBUGPRINT
-            Serial.println(F("Data Sent"));
-#endif
-            //se tirar essa linha soh manda 1 vez
-            //_client.stop();
-        }
 }
 
+
+String SmartClient::readSendData() {
+    int maxAttempts = 300, attempts = 0;
+    int time = millis();
+    int n;
+    int i;
+    int sucess;
+    String retorno;
+    while(_client.available() == 0 && attempts < maxAttempts) {
+        delay(100);
+        attempts++;
+    }
+    while(_client.available()) {
+        readLine();
+        if(posBuffer > 110){
+           for(i=153;i<posBuffer-4;i++){
+               if(readBuffer[i] != '\0'){
+                    retorno = retorno += readBuffer[i];
+               }
+            }
+        }
+    }
+    Serial.println(retorno);
+    return retorno;
+}
+
+void SmartClient::sendData(char hostname[], char AuthID[],String app,String form,char schema[],String campo){
+        _client.print(F("GET /api/fp/from/controls/"));
+        _client.print(schema);
+        _client.print(F("/"));
+        _client.print(form);
+        _client.print(F("/"));
+        _client.print(campo);
+        _client.println(F("/1/ HTTP/1.1"));
+        _client.println(F("Host: www.smartapps.com.br"));
+        _client.println("User-Agent: arduino-ethernet");
+        _client.print(F("Authorization: Basic "));
+        _client.println(AuthID);
+        _client.print(F("Cookie: PHPSESSID="));
+        _client.println(PHPSESSID);
+        _client.println();
+}
+
+char* SmartClient::getData(char hostname[], char login[], char pass[],char api[],char form[],char schema[],char campo[]){
+    char* result = "";
+    LOGIN = login;
+    encrypt(login, pass);
+    if (_client.connect(hostname, 80)) {
+       sendData(hostname, AuthID,api,form,schema,campo);
+       result = readData();
+      // Serial.print(result);
+    }
+    return  result;
+}
+
+char* SmartClient::readData() {
+    _client.flush();
+    int maxAttempts = 300, attempts = 0;
+    int time = millis();
+    int n;
+    int i;
+    int pos;
+    char* retorno = "";
+    while(_client.available() == 0 && attempts < maxAttempts) {
+        delay(100);
+        attempts++;
+    }
+    while(_client.available()) {
+        readLine();
+        if(posBuffer > 110){
+            retorno =strchr(readBuffer,'[');
+        }
+    }
+    return retorno;
 }
