@@ -54,40 +54,37 @@ class SmartClient {
         //typedef void (*DataArrivedDelegate)(SmartClient client, String data);
         bool connect(char hostname[], char login[] = "", char pass[] = "", int port = 80);
         String close(char hostname[], char login[] = "", char pass[] = "", int port = 80);
-        String getSchema(char hostname[], char login[] = "", char pass[] = "",int port = 80);
+        char* getSchema(char hostname[], char login[] = "", char pass[] = "",int port = 80);
+        char* getLastRegister(char hostname[], char login[], char pass[],char *api, char *from, char *schema, char *form, char *qtd,int field);
         bool connected();
          //void setDataArrivedDelegate(DataArrivedDelegate dataArrivedDelegate);
-        void send(bool GoP, char hostname[], char app[], char schema[], char caminho[], String data = "");
-        char* getData(char hostname[], char login[], char pass[],char app[],char form[],char schema[],char campo[]);
-       // void sendData( char hostname[], char app[], char form[], char schema[]);
-        
+        void send(char hostname[], char app[], char schema[], char caminho[], int variavel,int valor);
         String readResponse();
-        String readSchema();
+        char* readSchema();
+        char* readLastRegister(int field);
         String readSmart();
-        String readSendData();
-        void sendData(char hostname[], char AuthID[],String app,String form,char schema[],String campo);
-        char AuthID[70];
-        char PHPSESSID[33];
-        
+        char* readSendData();
+        char* parseJson(char* jsonString, int field);
+        char** str_split(char* a_str, const char a_delim);
+        char** split_resultado(char* json);
+        char *substring(char *string, int position, int length);
     private:
         //Variaveis Locais: maximo no teste foi 70
-
+        char AuthID[70];
+        char PHPSESSID[33];
         //char SENDRETORNO[50];
         String LOGIN;
-
-
         String buff; //utilizado pra ler as linhas
-
         #ifdef NEW
         char readBuffer[750]; //nao tem linha tao
         int posBuffer;
         #endif
-
         //Funcoes Locais:
         String getStringTableItem(int index);
         void encrypt(char login[], char pass[]);
         void sendHandshake(char hostname[], char AuthID[]);
         void sendSchema(char hostname[], char AuthID[]);
+        void sendLastRegister(char hostname[], char AuthID[],char *api, char *from, char *schema, char *form, char *qtd,int field);
         #ifdef WIFI
         WiFiClient _client;
         #endif
@@ -96,11 +93,9 @@ class SmartClient {
         #endif
         //DataArrivedDelegate _dataArrivedDelegate;
         bool readHandshake();
-       
         void readLine();
-        char* readData();
+        void readData();
         void readResponse2();
-
 };
 
 
