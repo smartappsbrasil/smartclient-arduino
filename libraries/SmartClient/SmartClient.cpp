@@ -11,6 +11,8 @@ Smartapps (http://www.smartapps.com.br) - Copyright 2013
 
 #include "SmartClient.h"
 #include "Base642.h"
+#include <string.h>
+#include <stdio.h>
 
 bool SmartClient::connect(char hostname[], char login[], char pass[], int port) {
     bool result = true;
@@ -52,8 +54,6 @@ String SmartClient::close(char hostname[], char login[], char pass[], int port) 
 }
 
 
-
-
 void SmartClient::sendSchema(char hostname[], char AuthID[]){
         _client.println(F("GET /api/fp/from/controls/_schemas  HTTP/1.1"));
         _client.print(F("Host: "));
@@ -67,8 +67,8 @@ void SmartClient::sendSchema(char hostname[], char AuthID[]){
 }
 
 
-String SmartClient::getSchema(char hostname[], char login[], char pass[], int port){
-    String result = "";
+char* SmartClient::getSchema(char hostname[], char login[], char pass[], int port){
+    char* result;
     LOGIN = login;
     encrypt(login, pass);
     if (_client.connect(hostname, port)) {
@@ -80,12 +80,14 @@ String SmartClient::getSchema(char hostname[], char login[], char pass[], int po
     return  result;
 }
 
-String SmartClient::readSchema() {
+char* SmartClient::readSchema() {
     int maxAttempts = 300, attempts = 0;
     int time = millis();
     int n;
     int i;
-    String retorno;
+    char *retorno;
+    char* result;
+    char* resultJson;
     while(_client.available() == 0 && attempts < maxAttempts) {
         delay(100);
         attempts++;
@@ -93,14 +95,14 @@ String SmartClient::readSchema() {
     while(_client.available()) {
        readLine();
         if(posBuffer = 146){
-           for(i=110;i<142;i++){
-               if(readBuffer[i] != '\0'){
-                    retorno = retorno += readBuffer[i];
-               }
-            }
+           retorno = readBuffer;
         }
     }
-    return retorno;
+    resultJson = strstr(retorno,"[\"");
+    resultJson = strtok(resultJson,"[\"");
+   _client.stop();
+   _client.flush();
+    return resultJson;
 }
 
 
@@ -111,7 +113,7 @@ void SmartClient::readResponse2() {
     posBuffer = 0;
     #endif
     while(_client.available() > 0 && (character = _client.read()) != '\n') {
-        if (character != '\r' && character != -1) {
+       // if (character != '\r' && character != -1) {
             #ifndef NEW
             buff += character;
             #endif
@@ -119,7 +121,7 @@ void SmartClient::readResponse2() {
             readBuffer[posBuffer] = character;
             posBuffer++;
             #endif
-      }
+      // }
     }
     #ifdef NEW
         readBuffer[posBuffer]= '\0';
@@ -142,9 +144,11 @@ void SmartClient::sendHandshake(char hostname[], char AuthID[]) {
     _client.print(F("Authorization: Basic "));
     _client.println(AuthID);
     _client.println();
+
     #ifdef DEBUGPRINT
         Serial.print(F("Dados enviados em [ms]: "));
         Serial.println(millis() - time);
+
         Serial.println(F("GET /api/fp/from HTTP/1.1"));
         Serial.print(F("Host: "));
         Serial.println(hostname);
@@ -159,6 +163,8 @@ bool SmartClient::readHandshake() {
     int time = millis();
     int n;
     int i;
+    //String handshake, line;
+
     #ifdef DEBUGPRINT
         Serial.println(F("Smart readHandshake"));
     #endif
@@ -263,6 +269,8 @@ bool SmartClient::readHandshake() {
                 #ifdef DEBUGPRINT
                 Serial.print(F("PHPSESSID encontrado: "));
                 Serial.println(PHPSESSID);
+                //Session("PHPSESSID") = PHPSESSID;
+
                 #endif
                 break;
             }
@@ -290,6 +298,8 @@ bool SmartClient::readHandshake() {
     //procura se conexao foi "sucessfull"
     while(_client.available()) {
         readLine();
+
+
         #ifdef NEW
         result = -1;
         //-10 do Successfull
@@ -323,8 +333,6 @@ bool SmartClient::readHandshake() {
         }
     }
 
-    _client.flush();
-    _client.stop();
 
     #ifdef DEBUGPRINT
         Serial.print(F("Dados recebidos em [ms]: "));
@@ -336,7 +344,11 @@ bool SmartClient::readHandshake() {
         }
         Serial.println(PHPSESSID);
     #endif
-    return PHPSESSID;
+        Serial.flush();
+        _client.stop();
+        _client.flush();
+    return result;
+
 }
 
 
@@ -363,7 +375,7 @@ String SmartClient::readResponse() {
         handshake += readBuffer + '\n';
     }
    //erial.println(readBuffer);
-    _client.stop();
+   
 }
 
 
@@ -376,7 +388,7 @@ void SmartClient::readLine() {
     posBuffer = 0;
     #endif
     while(_client.available() > 0 && (character = _client.read()) != '\n') {
-        if (character != '\r' && character != -1) {
+      //  if (character != '\r' && character != -1) {
             #ifndef NEW
             buff += character;
             #endif
@@ -385,25 +397,20 @@ void SmartClient::readLine() {
             posBuffer++;
             //if(posBuffer>1000) posBuffer = 0;
             #endif
-        }
+      //  }
     }
 
     #ifdef NEW
         readBuffer[posBuffer]= '\0';
     
     #endif
-
-    #ifdef DEBUGPRINT
-
-    #endif
 }
-
-void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], char caminho[], String PostData) {
+void SmartClient::send(char hostname[], char app[], char schema[], char caminho[], int variavel,int valor) {
    //DADOS A SEREM ENVIADOS!
-    _client.flush();
+    //_client.flush();
     String retorno;
     int i;
-    if(GoP==true){
+    
    if (_client.connect(hostname, 80)) {
 
     #ifdef DEBUGPRINT
@@ -424,56 +431,33 @@ void SmartClient::send (bool GoP, char hostname[], char app[], char schema[], ch
     _client.println(PHPSESSID);
     _client.println(F("Content-Type: application/x-www-form-urlencoded"));
     _client.print(F("Content-Length: "));
-    _client.println(PostData.length());
+    _client.println(30);
     _client.println();
-    _client.print(PostData);
+    _client.print("variavel=");
+    _client.print(variavel);
+    _client.print("&valor=");    
+    _client.print(valor);
     _client.println();
-    #ifdef DEBUGPRINT
-        Serial.println(F("Data Sent"));
-        Serial.println(PHPSESSID);
-    #endif
-    
-    readSendData();
     _client.stop();
      }
-    }
+    
 }
 
 
-String SmartClient::readSendData() {
-    int maxAttempts = 300, attempts = 0;
-    int time = millis();
-    int n;
-    int i;
-    int sucess;
-    String retorno;
-    while(_client.available() == 0 && attempts < maxAttempts) {
-        delay(100);
-        attempts++;
-    }
-    while(_client.available()) {
-        readLine();
-        if(posBuffer > 110){
-           for(i=153;i<posBuffer-4;i++){
-               if(readBuffer[i] != '\0'){
-                    retorno = retorno += readBuffer[i];
-               }
-            }
-        }
-    }
-    Serial.println(retorno);
-    return retorno;
-}
 
-void SmartClient::sendData(char hostname[], char AuthID[],String app,String form,char schema[],String campo){
-        _client.print(F("GET /api/fp/from/controls/"));
+
+void SmartClient::sendLastRegister(char hostname[], char AuthID[],char *api, char *from, char *schema, char *form, char *qtd,int field){
+        _client.print(F("GET /api/fp/from/"));
+        _client.print(api);
+        _client.print("/");
         _client.print(schema);
-        _client.print(F("/"));
+        _client.print("/");
         _client.print(form);
-        _client.print(F("/"));
-        _client.print(campo);
-        _client.println(F("/1/ HTTP/1.1"));
-        _client.println(F("Host: www.smartapps.com.br"));
+        _client.print(F("/_last/"));
+        _client.print(qtd);
+        _client.println(" HTTP/1.1");        
+        _client.print("Host: ");
+        _client.println(hostname);
         _client.println("User-Agent: arduino-ethernet");
         _client.print(F("Authorization: Basic "));
         _client.println(AuthID);
@@ -482,26 +466,24 @@ void SmartClient::sendData(char hostname[], char AuthID[],String app,String form
         _client.println();
 }
 
-char* SmartClient::getData(char hostname[], char login[], char pass[],char api[],char form[],char schema[],char campo[]){
-    char* result = "";
+
+char* SmartClient::getLastRegister(char hostname[], char login[], char pass[], char *api, char *from, char *schema, char *form, char *qtd,int field){
+    char* result;
     LOGIN = login;
     encrypt(login, pass);
     if (_client.connect(hostname, 80)) {
-       sendData(hostname, AuthID,api,form,schema,campo);
-       result = readData();
-      // Serial.print(result);
+        sendLastRegister(hostname, AuthID,api,from,schema,form,qtd,field);
+       result = readLastRegister(field);
     }
     return  result;
 }
 
-char* SmartClient::readData() {
-    _client.flush();
+char* SmartClient::readLastRegister(int field) {
     int maxAttempts = 300, attempts = 0;
     int time = millis();
     int n;
     int i;
-    int pos;
-    char* retorno = "";
+    char *retorno;
     while(_client.available() == 0 && attempts < maxAttempts) {
         delay(100);
         attempts++;
@@ -509,8 +491,46 @@ char* SmartClient::readData() {
     while(_client.available()) {
         readLine();
         if(posBuffer > 110){
-            retorno =strchr(readBuffer,'[');
+            retorno = readBuffer;
         }
     }
-    return retorno;
+    char* resultJson;
+    resultJson = strstr(retorno,"variavel\"");
+    char *pch;
+    char *values[5];
+    char *value;
+    char *dateTime;
+    char *subDateTime;
+    i = 0;
+    pch = strtok(resultJson,",");
+    while(pch != NULL && pch != "\""){
+        values[i] = pch;
+        i++;
+        pch = strtok (NULL, ",");
+    }
+
+    switch (field){
+        case 1:
+            value = strtok(values[0],"\"variavel\":");    
+        break;
+        case 2:
+            value = strtok(values[1],"\"valor\":");    
+        break;
+        case 3:
+            value = strtok(values[2],"\"latitude\":");    
+        break;
+        case 4:
+            value = strtok(values[3],"\"longitude\":");    
+        break;
+        case 5:
+                value = strtok(values[4],"}");
+                value = strchr(value,':');
+                value = strchr(value,'0x22');
+                value = strtok(value,"\"");
+        break;
+    }
+    _client.stop();
+    _client.flush();
+    return value;
+
 }
