@@ -26,6 +26,14 @@ void setup() {
   smart.connect(server, login, password);
     delay(2000);
 }
+
+// Last Register no ultimo parametro para pegar o variavel
+// 1 - pega a variavel
+// 2 - o valor 
+// 3 - latitude
+// 4 - longitude
+// 5 - data e horário
+// no exemplo abaixo estou requisitando o último valor inserido
 void loop() {
   if(Serial.available() > 0 ){
     tecla = Serial.readString();
