@@ -60,3 +60,4 @@ class SmartConnect {
         WiFiClient _client;
 
 };
+

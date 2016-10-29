@@ -5,6 +5,8 @@
 //#include <Ethernet.h>
 #include <ESP8266WiFi.h>
 #include "SmartConnect.h"
+#include <SPI.h>
+#include <stdlib.h>
 
 /**
  * [SmartConnect::begin method to start the smart connect library]
