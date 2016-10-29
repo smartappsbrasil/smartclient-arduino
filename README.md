@@ -1,17 +1,17 @@
 #SMART CONNECT
 ----
 
-This library can help developers that want work with **small devices** using C++ using the same code for all types of devices and components.
+This library can help developers that want to work with **small devices** with C++, reusing the same code for all types of devices and components.
 
 ##Introduction
 
-**SMART CONNECT** is a **layer** writed in C++ for you work with amoung of libraries that exists using the same structure of data, combined with a easy way to build new solutions.
+**SMART CONNECT** is a **layer** wrote in C++ for you to work amongst libraries that exist using the same structure of data, combined with an easy way to build new solutions.
 
-*Pay atention: this library work like a layer for your solution.*
+*Pay atention: this library works like a layer for your solution.*
 
-###Why you need use a thing like that?
+###Why you need use a thing like this?
 
-Because your need save time in the development. So, using it you can build solutions more fast.
+Because your need to reduce development time. In so, your solutions come to life earlier.
 
 ###Devices Supported
 
@@ -23,7 +23,7 @@ Because your need save time in the development. So, using it you can build solut
 
 ##Setup and Install
 
-You can install this lib in your enviroment in a few step. See how to-do it below.
+You can install this lib in your enviroment with a few steps. See how to-do it below.
 
 ###Arduino
 
@@ -32,12 +32,12 @@ You can install this lib in your enviroment in a few step. See how to-do it belo
 * Get the zip of library.
 * Go to menu Sketch > Include Library > Add Zip Library, choose your zip and ok.
 * Now, check if the library are installed, menu Sketch > Include Library and scroll down to see if show **smartconnect**.
-* If the library are installed, you can use.
+* If the library is installed, you are done.
 
 
 ##Methods
 
-Below you have all public methods detailed.
+Below you can see all public methods in detail.
 
 ###void begin(int sp, bool debug);
 
@@ -50,7 +50,7 @@ Load the library to start.
  */
 ```
 
-**Pay atention:** this method is the first to exec.
+**Pay atention:** this method has to be executed first.
 
 ###bool connect(String hostname, char login[], char pass[], int port = 80);
 
@@ -106,7 +106,7 @@ Public method to send data for an application, see details about args below:
 
 ###String exec(char* requestType, char* wreturn, char* app, char* schema, char* path, char* stringData = "");
 
-Public method for exec a method in the core of an app.
+Public method to exec a method in the core of an app.
 
 ```
 /**
@@ -123,14 +123,14 @@ Public method for exec a method in the core of an app.
 
 ##API Details
 
-The docs of API is avaiable on the site of smartapps. If you can see details about methods and returns of request. See the link below:
+The API documentation is avaiable on smartapps.com.br. ?????????????????????????? If you can see details about methods and returns of request. See the link below:
 
 **Details about methods:**<br>
 http://www.smartapps.com.br/a/docs/smart/api/metodos.html
 
 ##Examples
 
-If you want see more details how to use this library, in the **examples** folder, have some files that can help.
+If you want see more details on how to use this library, go to the  **examples** folder.There are some files that may be of help.
 
 * ESP8266
 * Arduino
