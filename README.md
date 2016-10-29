@@ -15,7 +15,6 @@ Because your need save time in the development. So, using it you can build solut
 
 ###Devices Supported
 
-* Momote
 * Copacabana
 * Arduino
 * ESP8266
@@ -83,7 +82,7 @@ Public method to get any data from any application, see details about args below
 
 ````
 /**
- * 
+ *
  * @param  app    [application name]
  * @param  schema [key of schema]
  * @param  path   [path of execution. can be the form name]
