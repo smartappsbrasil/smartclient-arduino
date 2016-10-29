@@ -19,7 +19,7 @@ void SmartConnect::begin(int sp, bool smc_debug) {
     SMC_DEBUG = smc_debug;
 
     //_client* = WiFiClient;
-    WiFiClient _client;
+    //WiFiClient _client;
 
 }
 
