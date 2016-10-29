@@ -5,7 +5,7 @@ This library aims to help developers dealing with **small devices** using C++, a
 
 ##Introduction
 
-**SMART CONNECT** is a **layer** wrote in C++ for you to work amongst libraries that exist using the same structure of data, combined with an easy way to build new solutions.
+**SMART CONNECT** is a **layer** written in C++ for you to work amongst libraries that exist using the same structure of data, combined with an easy way to build new solutions.
 
 *Pay atention: this library works like a layer for your solution.*
 
