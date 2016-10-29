@@ -1,7 +1,7 @@
 #SMART CONNECT
 ----
 
-This library can help developers that want to work with **small devices** with C++, reusing the same code for all types of devices and components.
+This library aims to help developers dealing with **small devices** using C++, and reusing the same code for all types of devices and components.
 
 ##Introduction
 
