@@ -1,12 +1,16 @@
 #include <Arduino.h>
-#include "Base642.h"
+#include <Base642.h>
 #include <string.h>
 #include <stdio.h>
-//#include <Ethernet.h>
-#include <ESP8266WiFi.h>
-#include "SmartConnect.h"
 #include <SPI.h>
 #include <stdlib.h>
+
+#include <SmartConnect.h>
+
+#include <ESP8266WiFi.h>
+
+// lib vars
+WiFiClient _client;
 
 /**
  * [SmartConnect::begin method to start the smart connect library]
@@ -20,8 +24,7 @@ void SmartConnect::begin(int sp, bool smc_debug) {
     Serial.begin(sp);
     SMC_DEBUG = smc_debug;
 
-    //_client* = WiFiClient;
-    //WiFiClient _client;
+    memset(wBuffer,'\0',_SC_sizeBuffer);
 
 }
 
@@ -59,8 +62,7 @@ void SmartConnect::doHandShake() {
 void SmartConnect::doFlushData() {
     Serial.flush();
     _client.stop();
-    //_client.flush();
-    //free(wBuffer);
+    memset(wBuffer, 0, sizeof(wBuffer));
 }
 
 /**
@@ -89,11 +91,11 @@ char* SmartConnect::parseBasedPattern(char outStr[], char wData[], char pattern[
     if (SMC_DEBUG) {
 
         Serial.println();
-        Serial.print("Pattern length: ");
+        Serial.print(_SC_patternLength);
         Serial.print(patternSize);
         Serial.println();
 
-        Serial.println("Procurando padrao: ");
+        Serial.println(_SC_searchPattern);
 
     }
 
@@ -155,11 +157,11 @@ char* SmartConnect::parseBasedPattern(char outStr[], char wData[], char pattern[
 
     if (SMC_DEBUG) {
 
-        Serial.println("Procurando padrao... Done");
+        Serial.println(_SC_searchPatternDone);
 
-        Serial.print("Resultado encontrado: ");
+        Serial.print(_SC_searchPatternResult);
         Serial.print(outStr);
-        Serial.print(" Tamanho: ");
+        Serial.print(_SC_searchPatternResultLength);
         Serial.println(sizeof(outStr));
 
     }
@@ -214,6 +216,9 @@ bool SmartConnect::connect(String hostname, char login[], char pass[], int port)
 
             envelopeRequest("GET", "from", "", "", "", "", AuthID, "");
             result = readEnvelopeConnect();
+
+            doFlushData(); // new added
+
         }
 
     }
@@ -256,8 +261,10 @@ String SmartConnect::from(char* app, char* schema, char* path) {
             delay(1);
 
             if (SMC_DEBUG) {
+
                 Serial.println("resposta adicionada ao buffer...");
                 Serial.println(wBuffer);
+
             }
 
             return wBuffer;
@@ -276,7 +283,7 @@ String SmartConnect::from(char* app, char* schema, char* path) {
  * @param   stringData   [data vars to send. ex: name=value]
  * @return               [content of request]
  */
-String SmartConnect::to(char* app, char* schema, char* path, char* stringData) {
+String SmartConnect::to(char* app, char* schema, char* path, char* stringData, bool readResponse) {
 
     if (connected()) {
 
@@ -297,9 +304,10 @@ String SmartConnect::to(char* app, char* schema, char* path, char* stringData) {
 
             envelopeRequest("POST", "to", app, schema, path, stringData, AuthID, wSessionId);
 
-            delay(1);
-
-            readEnvelopeResponse(SMC_DEBUG, true);
+            if (readResponse) {
+                delay(1);
+                readEnvelopeResponse(SMC_DEBUG, true);
+            }
 
             delay(1);
 
@@ -308,7 +316,11 @@ String SmartConnect::to(char* app, char* schema, char* path, char* stringData) {
                 Serial.println(wBuffer);
             }
 
-            return wBuffer;
+            if (readResponse) {
+                return wBuffer;
+            } else {
+                return "1";
+            }
 
         }
 
@@ -327,7 +339,7 @@ String SmartConnect::to(char* app, char* schema, char* path, char* stringData) {
  * @return             [description]
  * @return             [content of request]
  */
-String SmartConnect::exec(char* requestType, char* wreturn, char* app, char* schema, char* path, char* stringData) {
+String SmartConnect::exec(char* requestType, char* wreturn, char* app, char* schema, char* path, char* stringData, bool readResponse) {
 
     if (connected()) {
 
@@ -355,9 +367,10 @@ String SmartConnect::exec(char* requestType, char* wreturn, char* app, char* sch
 
             envelopeRequest(requestType, arrayCharReqType, app, schema, path, stringData, AuthID, wSessionId);
 
-            delay(1);
-
-            readEnvelopeResponse(SMC_DEBUG, true);
+            if (readResponse) {
+                delay(1);
+                readEnvelopeResponse(SMC_DEBUG, true);
+            }
 
             delay(1);
 
@@ -368,7 +381,11 @@ String SmartConnect::exec(char* requestType, char* wreturn, char* app, char* sch
 
             doFlushData();
 
-            return wBuffer;
+            if (readResponse) {
+                return wBuffer;
+            } else {
+                return "1";
+            }
 
         }
 
@@ -467,6 +484,8 @@ bool SmartConnect::connectOnHostname(int wPort) {
  * @param  PHPSESSID  [Session ID]
  */
 void SmartConnect::envelopeRequest(char* rtype,char* rpath,char* app,char* schema,char* path,char* stringData,char* AuthID,char* PHPSESSID) {
+
+    //memset(wBuffer, 0, sizeof(wBuffer));
 
     if (SMC_DEBUG) {
         Serial.println(AuthID);
@@ -581,21 +600,21 @@ void SmartConnect::envelopeRequest(char* rtype,char* rpath,char* app,char* schem
 
         _client.println(F("Content-Type: application/x-www-form-urlencoded"));
         _client.print(F("Content-Length: "));
-        _client.println(30);
+        _client.println(20);
         _client.println();
         _client.println(stringData);
 
         if (SMC_DEBUG) {
             Serial.println(F("Content-Type: application/x-www-form-urlencoded"));
             Serial.print(F("Content-Length: "));
-            Serial.println(30);
+            Serial.println(20);
             Serial.println();
             Serial.println(stringData);
         }
 
+    } else {
+        _client.println();
     }
-
-    _client.println();
 
     if (SMC_DEBUG) {
         Serial.println();
@@ -612,9 +631,11 @@ void SmartConnect::envelopeRequest(char* rtype,char* rpath,char* app,char* schem
  * @param excludeHeaders [option for exclude headers. ps: it's increase time reading the response.]
  * @param bufferSize     [size of the buffer to save response]
  */
-void SmartConnect::readEnvelopeResponse(bool d, bool excludeHeaders, int bufferSize) {
+void SmartConnect::readEnvelopeResponse(bool d, bool excludeHeaders) {
 
     //char wBuffer[bufferSize];
+
+    doHandShake();
 
     if (d) {
         Serial.println("lendo resposta ... ");
@@ -638,23 +659,25 @@ void SmartConnect::readEnvelopeResponse(bool d, bool excludeHeaders, int bufferS
 
     if (timeout == 0) {
 
+        char character;
+        int posBuffer=0;
+        int posResponseContent=0;
+        int charBuffer=0;
+
         if (excludeHeaders) {
 
-            char character;
-            int posBuffer=0;
-            int posResponseContent=0;
-            int charBuffer=0;
             bool first=false;
             int lastChar[4];
             int lastCharInt=0;
+            int hexNumber;
 
             if (d) {
                 Serial.println(_client.available());
             }
 
-            memset(wBuffer,'\0',bufferSize);
+            while(_client.available() > 0) {
 
-            while(_client.available() > 0 && (character = _client.read())) {
+                character = _client.read();
 
                 int hexNumber = character;
 
@@ -706,14 +729,9 @@ void SmartConnect::readEnvelopeResponse(bool d, bool excludeHeaders, int bufferS
 
         } else {
 
-            char character;
-            int posBuffer=0;
-            int posResponseContent=0;
-            int charBuffer=0;
+            while(_client.available() > 0) {
 
-            memset(wBuffer,'\0',bufferSize);
-
-            while(_client.available() > 0 && (character = _client.read())) {
+                character = _client.read();
 
                 if (d) {
                     Serial.println(character);
@@ -739,44 +757,6 @@ void SmartConnect::readEnvelopeResponse(bool d, bool excludeHeaders, int bufferS
         }
 
     }
-
-}
-
-/**
- * Private method to check if the response is 200
- * @return [return a boolean. ex: true of false]
- */
-bool SmartConnect::checkIfResponseIs200() {
-
-    int i;
-    i=0;
-
-    if(
-        (wBuffer[i] == 'H') &&
-        (wBuffer[i+1] == 'T') &&
-        (wBuffer[i+2] == 'T') &&
-        (wBuffer[i+3] == 'P') &&
-        (wBuffer[i+4] == '/') &&
-        (wBuffer[i+5] == '1') &&
-        (wBuffer[i+6] == '.') &&
-        (wBuffer[i+7] == '1') &&
-        (wBuffer[i+8] == ' ')
-      ){
-
-        //verifica se a resposta eh 200
-        if(
-            (wBuffer[i+9] == '2') &&
-            (wBuffer[i+10] == '0') &&
-            (wBuffer[i+11] == '0')
-        ){
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-    return false;
 
 }
 

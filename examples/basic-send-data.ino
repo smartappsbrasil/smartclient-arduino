@@ -12,8 +12,8 @@ const char* wifiPassword = "PASSWORD";
 
 // smart vars
 char server[] = "HOSTNAME";              //Endereco Smartapps.
-char login[] = "USER KEY";   //Login do usuario: Encontra-se na plataforma.
-char password[] = "CONNECT KEY";            //Senha do usuário: Encontra-se na plataforma.
+char login[] = "USER_KEY";   //Login do usuario: Encontra-se na plataforma.
+char password[] = "CONNECT_KEY";            //Senha do usuário: Encontra-se na plataforma.
 char app[] = "APP_NAME";                             //Nome do aplicativo utilizado.
 char schema[] = "SCHEMA";  //Login do aplicativo: Normalmente o mesmo do usuário, só muda se for utilizado um aplicativo que foi compartilhado por outro usuário, neste caso é o login do outro usuário.
 
@@ -72,6 +72,8 @@ void loop() {
   if (SMART.connected()) {
 
     Serial.println("Enviando dados dados...");
+
+    randNumber = random(30);
 
     String stringPostData = "";
     stringPostData.concat(postDataVar1);
